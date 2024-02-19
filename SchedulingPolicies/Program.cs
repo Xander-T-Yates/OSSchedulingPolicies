@@ -5,7 +5,8 @@ public class Program
     private static void Main(string[] args)
     {
         SchedulingPolicy policy = new FCFS();
-        
+        // policy = new RoundRobin(2);
+
         policy.QueueProcess(new(0, 3));
         policy.QueueProcess(new(2, 5));
         policy.QueueProcess(new(5, 5));
@@ -16,6 +17,8 @@ public class Program
 
         while (!policy.IsFinished)
             policy.Run();
+
+        policy.SaveToFile("Output.csv");
 
         Console.WriteLine(policy.ToString());
     }
