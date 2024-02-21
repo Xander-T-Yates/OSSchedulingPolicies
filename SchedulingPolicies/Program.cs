@@ -5,7 +5,7 @@ public class Program
     private static void Main(string[] args)
     {
         SchedulingPolicy policy = new FCFS();
-        policy = new RoundRobin(1);
+        policy = new RoundRobin(6);
 
         const bool optimiseArrivalTime = false;
 

@@ -27,23 +27,26 @@ public sealed class GraphData
         if (File.Exists(fileName))
             File.Delete(fileName);
 
-        using (var stream = File.Create(fileName)) { }
+        using (FileStream stream = File.Create(fileName))
+        {
+        }
 
         Workbook workbook = new();
         workbook.Worksheets.Clear();
-        var worksheet = workbook.Worksheets.Add("Graph");
+        Worksheet? worksheet = workbook.Worksheets.Add("Graph");
 
-        for (int i = 0; i < endTime; i++)
+        for (var i = 0; i < endTime; i++)
             worksheet.Range[1, i + 2].Value = (i + 1).ToString("n0");
 
-        for (int i = 0; i < _nodes.Count; i++)
+        for (var i = 0; i < _nodes.Count; i++)
         {
             KeyValuePair<char, List<int>> node = _nodes[i];
 
             worksheet.Range[i + 2, 1].Value = node.Key.ToString();
 
-            for (int j = 0; j < endTime; j++)
-                worksheet.Range[i + 2, j + 2].Style.Color = node.Value.Contains(j) ? Color.Gray : Color.White;
+            for (var j = 0; j < endTime; j++)
+                if (node.Value.Contains(j))
+                    worksheet.Range[i + 2, j + 2].Style.Color = Color.Gray;
         }
 
         worksheet.AllocatedRange.RowHeight = (worksheet.AllocatedRange.ColumnWidth = 3) * 6;

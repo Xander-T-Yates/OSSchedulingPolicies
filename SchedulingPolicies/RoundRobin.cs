@@ -20,6 +20,24 @@ public sealed class RoundRobin(int quantumSize) : SchedulingPolicy
         PrepareProcesses();
         if (_runningProcesses.Count is not 0)
             ActiveProcess = _runningProcesses[0];
+    }
+    protected override void RunProcesses() { }
+    protected override void PostRunProcesses()
+    {
+        if (ActiveProcess.PassedServiceTime == 0)
+            _passedQuantum = 0;
+
+        if (++_passedQuantum >= QuantumSize)
+        {
+            _runningProcesses.Remove(ActiveProcess);
+            _runningProcesses.Add(ActiveProcess);
+
+            if (_runningProcesses.Count > 1)
+            {
+                ActiveProcess = _runningProcesses.First();
+                _passedQuantum = 0;
+            }
+        }
 
         if (ActiveProcess is null)
         {
@@ -33,22 +51,11 @@ public sealed class RoundRobin(int quantumSize) : SchedulingPolicy
         {
             if (_lastId != ActiveProcess.Id)
             {
-                if (_lastId is not (char)0)
-                    _passedQuantum = 0;
-
+                _passedQuantum = 0;
                 _lastId = ActiveProcess.Id;
-            }
-
-            if (++_passedQuantum >= QuantumSize)
-            {
-                _runningProcesses.Remove(ActiveProcess);
-                _runningProcesses.Add(ActiveProcess);
-
-                ActiveProcess = _runningProcesses[0];
             }
         }
     }
-    protected override void RunProcesses() { }
     protected override void SaveProcess(StreamWriter writer, Process? process, FileSection section, bool isHeader)
     {
         if (section is not FileSection.Extra1 || !isHeader)

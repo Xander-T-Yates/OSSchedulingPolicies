@@ -44,7 +44,7 @@ public abstract class SchedulingPolicy
     protected void PrepareProcesses()
     {
         List<Process> toUnqueue = new();
-        foreach (var process in _queuedProcesses)
+        foreach (Process process in _queuedProcesses)
             if (!_runningProcesses.Contains(process) && RunTime >= process.ArrivalTime)
             {
                 _runningProcesses.Add(process);
@@ -63,17 +63,17 @@ public abstract class SchedulingPolicy
     }
     public void Run()
     {
-        PreRunProcesses();
         CheckFinishedProcesses();
 
         if (IsFinished)
-        {
-            --RunTime;
             return;
-        }
+
+        PreRunProcesses();
 
         if (_runningProcesses.Count is not 0)
             RunProcesses();
+
+        PostRunProcesses();
 
         if (ActiveProcess is not null)
         {
@@ -93,7 +93,7 @@ public abstract class SchedulingPolicy
                 return;
 
             List<Process> toFinish = new();
-            foreach (var process in _runningProcesses)
+            foreach (Process process in _runningProcesses)
             {
                 if (process.PassedServiceTime < process.ServiceTime)
                     continue;
@@ -106,7 +106,7 @@ public abstract class SchedulingPolicy
             }
 
             if (toFinish.Count is not 0)
-                foreach (var process in toFinish)
+                foreach (Process process in toFinish)
                     _runningProcesses.Remove(process);
         }
     }
@@ -119,11 +119,11 @@ public abstract class SchedulingPolicy
         if (File.Exists(filePath))
             File.Delete(filePath);
 
-        using (var stream = File.Create(filePath)) { }
+        using (FileStream stream = File.Create(filePath)) { }
 
         using (StreamWriter writer = new(filePath))
         {
-            for (int i = 0; i < (int)FileSection.Count; i++)
+            for (var i = 0; i < (int)FileSection.Count; i++)
             {
                 SaveProcess(writer, null, (FileSection)i, true);
                 writer.Write(',');
@@ -131,9 +131,9 @@ public abstract class SchedulingPolicy
 
             writer.WriteLine();
 
-            foreach (var process in _finishedProcesses)
+            foreach (Process process in _finishedProcesses)
             {
-                for (int i = 0; i < (int)FileSection.Count; i++)
+                for (var i = 0; i < (int)FileSection.Count; i++)
                 {
                     SaveProcess(writer, process, (FileSection)i, false);
                     writer.Write(',');
@@ -146,12 +146,12 @@ public abstract class SchedulingPolicy
 
     public override string ToString()
     {
-        var sb = new StringBuilder().AppendLine(GetType().Name);
+        StringBuilder sb = new StringBuilder().AppendLine(GetType().Name);
 
         if (_finishedProcesses.Count is not 0)
         {
             sb.AppendLine("- Finished processes: " + Environment.NewLine);
-            foreach (var process in _finishedProcesses)
+            foreach (Process process in _finishedProcesses)
                 sb.AppendLine(process.ToString());
         }
 
@@ -159,7 +159,8 @@ public abstract class SchedulingPolicy
     }
 
     protected virtual void PreRunProcesses() { }
-    protected abstract void RunProcesses();
+    protected virtual void RunProcesses() { }
+    protected virtual void PostRunProcesses() { }
     protected virtual void SaveProcess(StreamWriter writer, Process? process, FileSection section, bool isHeader)
     {
         if (isHeader)
