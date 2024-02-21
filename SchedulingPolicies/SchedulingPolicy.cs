@@ -115,7 +115,7 @@ public abstract class SchedulingPolicy
 
         using (StreamWriter writer = new(filePath))
         {
-            for (int i = 0; i < (int)FileSection.Count; i++)
+            for (var i = 0; i < (int)FileSection.Count; i++)
             {
                 SaveProcess(writer, null, (FileSection)i, true);
                 writer.Write(',');
@@ -125,7 +125,7 @@ public abstract class SchedulingPolicy
 
             foreach (Process process in _finishedProcesses)
             {
-                for (int i = 0; i < (int)FileSection.Count; i++)
+                for (var i = 0; i < (int)FileSection.Count; i++)
                 {
                     SaveProcess(writer, process, (FileSection)i, false);
                     writer.Write(',');
@@ -209,7 +209,7 @@ public abstract class SchedulingPolicy
                     break;
 
                 case FileSection.NormalisedTurnaround:
-                    writer.Write(process.NormalisedTurnaround.ToString("g2"));
+                    writer.Write(process.NormalisedTurnaround.ToString("g4"));
                     break;
             }
     }

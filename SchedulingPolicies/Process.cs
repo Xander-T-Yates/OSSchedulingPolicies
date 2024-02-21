@@ -32,7 +32,7 @@ public class Process(int arrivalTime, int serviceTime)
         if (PassedServiceTime >= ServiceTime)
             sb.Append($"Finish: {FinishTime:n0} | ")
                 .AppendLine($"Turnaround: {TurnaroundTime:n0};")
-                .AppendLine($"Normalised turnaround: {NormalisedTurnaround:g2}");
+                .AppendLine($"Normalised turnaround: {NormalisedTurnaround:g4}");
 
         return sb.ToString();
     }
