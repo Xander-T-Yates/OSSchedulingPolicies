@@ -26,6 +26,7 @@ public abstract class SchedulingPolicy
 
     #region Attributes
 
+    private GraphData _graphData = new();
     protected readonly List<Process> _queuedProcesses = new();
     protected readonly List<Process> _runningProcesses = new();
     protected readonly List<Process> _finishedProcesses = new();
@@ -43,7 +44,7 @@ public abstract class SchedulingPolicy
     protected void PrepareProcesses()
     {
         List<Process> toUnqueue = new();
-        foreach (Process process in _queuedProcesses)
+        foreach (var process in _queuedProcesses)
             if (!_runningProcesses.Contains(process) && RunTime >= process.ArrivalTime)
             {
                 _runningProcesses.Add(process);
@@ -74,8 +75,13 @@ public abstract class SchedulingPolicy
         if (_runningProcesses.Count is not 0)
             RunProcesses();
 
-        if (ActiveProcess is not null && !_finishedProcesses.Contains(ActiveProcess))
-            ++ActiveProcess.PassedServiceTime;
+        if (ActiveProcess is not null)
+        {
+            if (!_finishedProcesses.Contains(ActiveProcess))
+                ++ActiveProcess.PassedServiceTime;
+
+            _graphData.CreateNode(RunTime, ActiveProcess.Id);
+        }
 
         ++RunTime;
 
@@ -87,7 +93,7 @@ public abstract class SchedulingPolicy
                 return;
 
             List<Process> toFinish = new();
-            foreach (Process process in _runningProcesses)
+            foreach (var process in _runningProcesses)
             {
                 if (process.PassedServiceTime < process.ServiceTime)
                     continue;
@@ -100,20 +106,24 @@ public abstract class SchedulingPolicy
             }
 
             if (toFinish.Count is not 0)
-                foreach (Process process in toFinish)
+                foreach (var process in toFinish)
                     _runningProcesses.Remove(process);
         }
     }
     public void SaveToFile(string filePath)
     {
+        string graphPath = filePath.Replace(".csv", string.Empty) + "Graph.xlsx";
+        _graphData.endTime = RunTime;
+        _graphData.SaveToFile(graphPath);
+
         if (File.Exists(filePath))
             File.Delete(filePath);
 
-        using (FileStream stream = File.Create(filePath)) { }
+        using (var stream = File.Create(filePath)) { }
 
         using (StreamWriter writer = new(filePath))
         {
-            for (var i = 0; i < (int)FileSection.Count; i++)
+            for (int i = 0; i < (int)FileSection.Count; i++)
             {
                 SaveProcess(writer, null, (FileSection)i, true);
                 writer.Write(',');
@@ -121,9 +131,9 @@ public abstract class SchedulingPolicy
 
             writer.WriteLine();
 
-            foreach (Process process in _finishedProcesses)
+            foreach (var process in _finishedProcesses)
             {
-                for (var i = 0; i < (int)FileSection.Count; i++)
+                for (int i = 0; i < (int)FileSection.Count; i++)
                 {
                     SaveProcess(writer, process, (FileSection)i, false);
                     writer.Write(',');
@@ -136,12 +146,12 @@ public abstract class SchedulingPolicy
 
     public override string ToString()
     {
-        StringBuilder sb = new StringBuilder().AppendLine(GetType().Name);
+        var sb = new StringBuilder().AppendLine(GetType().Name);
 
         if (_finishedProcesses.Count is not 0)
         {
             sb.AppendLine("- Finished processes: " + Environment.NewLine);
-            foreach (Process process in _finishedProcesses)
+            foreach (var process in _finishedProcesses)
                 sb.AppendLine(process.ToString());
         }
 
