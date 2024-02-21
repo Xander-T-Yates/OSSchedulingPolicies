@@ -17,24 +17,38 @@ public sealed class RoundRobin(int quantumSize) : SchedulingPolicy
 
     protected override void PreRunProcesses()
     {
-        if (ActiveProcess is not null && ActiveProcess.Id == _lastId)
-            return;
+        PrepareProcesses();
+        if (_runningProcesses.Count is not 0)
+            ActiveProcess = _runningProcesses[0];
 
-        _passedQuantum = 0;
-
-        if (ActiveProcess is not null)
-            _lastId = ActiveProcess.Id;
-    }
-    protected override void RunProcesses()
-    {
-        ActiveProcess = _runningProcesses.First();
-
-        if (++_passedQuantum > QuantumSize && _runningProcesses.Count is > 1)
+        if (ActiveProcess is null)
         {
-            _runningProcesses.Remove(ActiveProcess);
-            _runningProcesses.Add(ActiveProcess);
+            if (_lastId is not (char)0)
+            {
+                _passedQuantum = 0;
+                _lastId = (char)0;
+            }
+        }
+        else
+        {
+            if (_lastId != ActiveProcess.Id)
+            {
+                if (_lastId is not (char)0)
+                    _passedQuantum = 0;
+
+                _lastId = ActiveProcess.Id;
+            }
+
+            if (++_passedQuantum >= QuantumSize)
+            {
+                _runningProcesses.Remove(ActiveProcess);
+                _runningProcesses.Add(ActiveProcess);
+
+                ActiveProcess = _runningProcesses[0];
+            }
         }
     }
+    protected override void RunProcesses() { }
     protected override void SaveProcess(StreamWriter writer, Process? process, FileSection section, bool isHeader)
     {
         if (section is not FileSection.Extra1 || !isHeader)

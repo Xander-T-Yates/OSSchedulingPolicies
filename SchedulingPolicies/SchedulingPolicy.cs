@@ -40,6 +40,19 @@ public abstract class SchedulingPolicy
 
     #region Operations
 
+    protected void PrepareProcesses()
+    {
+        List<Process> toUnqueue = new();
+        foreach (Process process in _queuedProcesses)
+            if (!_runningProcesses.Contains(process) && RunTime >= process.ArrivalTime)
+            {
+                _runningProcesses.Add(process);
+                toUnqueue.Add(process);
+            }
+
+        if (toUnqueue.Count is not 0)
+            _queuedProcesses.RemoveAll(toUnqueue.Contains);
+    }
     public void QueueProcess(Process process)
     {
         if (_queuedProcesses.Contains(process))
@@ -58,31 +71,16 @@ public abstract class SchedulingPolicy
             return;
         }
 
-        PrepareProcesses();
-
         if (_runningProcesses.Count is not 0)
             RunProcesses();
 
-        if (ActiveProcess is not null)
+        if (ActiveProcess is not null && !_finishedProcesses.Contains(ActiveProcess))
             ++ActiveProcess.PassedServiceTime;
 
         ++RunTime;
 
         return;
 
-        void PrepareProcesses()
-        {
-            List<Process> toUnqueue = new();
-            foreach (Process process in _queuedProcesses)
-                if (!_runningProcesses.Contains(process) && RunTime >= process.ArrivalTime)
-                {
-                    _runningProcesses.Add(process);
-                    toUnqueue.Add(process);
-                }
-
-            if (toUnqueue.Count is not 0)
-                _queuedProcesses.RemoveAll(toUnqueue.Contains);
-        }
         void CheckFinishedProcesses()
         {
             if (_runningProcesses.Count is 0)

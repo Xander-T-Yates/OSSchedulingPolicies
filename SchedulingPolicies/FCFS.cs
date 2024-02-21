@@ -2,12 +2,11 @@
 
 public sealed class FCFS : SchedulingPolicy
 {
-    #region Operations
-
-    protected override void RunProcesses()
+    protected override void PreRunProcesses()
     {
-        ActiveProcess = _runningProcesses.First();
+        PrepareProcesses();
+        if (_runningProcesses.Count is not 0)
+            ActiveProcess = _runningProcesses[0];
     }
-
-    #endregion
+    protected override void RunProcesses() { }
 }
